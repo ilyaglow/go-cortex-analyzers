@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"gopkg.ilya.app/ilyaglow/go-cortex.v1"
+	"github.com/ilyaglow/go-cortex"
 )
 
 const (
@@ -19,37 +19,51 @@ type report struct {
 	Results []result `json:"results"`
 }
 
-type result []interface{}
+type result struct {
+	Name         string   `json:"Name"`
+	Title        string   `json:"Title"`
+	Domain       string   `json:"Domain"`
+	BreachDate   string   `json:"BreachDate"`
+	AddedDate    string   `json:"AddedDate"`
+	ModifiedDate string   `json:"ModifiedDate"`
+	PwnCount     int      `json:"PwnCount"`
+	Description  string   `json:"Description"`
+	DataClasses  []string `json:"DataClasses"`
+	IsVerified   bool     `json:"IsVerified"`
+	IsSensitive  bool     `json:"IsSensitive"`
+	IsRetired    bool     `json:"IsRetired"`
+	IsSpamList   bool     `json:"IsSpamList"`
+}
 
 func main() {
-	i, err := cortex.NewInput()
+	i, client, err := cortex.NewInput()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	br, btxs, err := getBreaches(i.Data)
+	br, btxs, err := getBreaches(client, i.Data)
 	if err != nil {
-		cortex.SayError(i, err.Error())
+		i.PrintError(err)
 	}
 
-	pr, ptxs, err := getPastes(i.Data)
+	pr, ptxs, err := getPastes(client, i.Data)
 	if err != nil {
-		cortex.SayError(i, err.Error())
+		i.PrintError(err)
 	}
 
 	r := report{}
 	if br != nil {
-		r.Results = append(r.Results, *br)
+		r.Results = append(r.Results, br...)
 	}
 
 	if pr != nil {
-		r.Results = append(r.Results, *pr)
+		r.Results = append(r.Results, pr...)
 	}
-	cortex.SayReport(r, append(btxs, ptxs...))
+	i.PrintReport(r, append(btxs, ptxs...))
 }
 
-func getBreaches(acc string) (*result, []cortex.Taxonomy, error) {
-	resp, err := http.Get(apiv2Breaches + acc)
+func getBreaches(c *http.Client, acc string) ([]result, []cortex.Taxonomy, error) {
+	resp, err := c.Get(apiv2Breaches + acc)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -68,10 +82,10 @@ func getBreaches(acc string) (*result, []cortex.Taxonomy, error) {
 		})
 		return nil, txs, nil
 	case 200:
-		var r result
+		var r []result
 		dec := json.NewDecoder(resp.Body)
 		if err := dec.Decode(&r); err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("json decode: %s", err.Error())
 		}
 
 		txs = append(txs, cortex.Taxonomy{
@@ -83,8 +97,7 @@ func getBreaches(acc string) (*result, []cortex.Taxonomy, error) {
 
 		var vf int
 		for i := range r {
-			m := r[i].(map[string]interface{})
-			if m["IsVerified"].(bool) {
+			if r[i].IsVerified {
 				vf++
 			}
 		}
@@ -97,14 +110,14 @@ func getBreaches(acc string) (*result, []cortex.Taxonomy, error) {
 			Value:     strconv.FormatInt(int64(vf), 10),
 		})
 
-		return &r, txs, nil
+		return r, txs, nil
 	default:
-		return nil, nil, fmt.Errorf("Unexpected status code from haveibeenpwned.com %s", resp.Status)
+		return nil, nil, fmt.Errorf("unexpected status code from haveibeenpwned.com %s", resp.Status)
 	}
 }
 
-func getPastes(acc string) (*result, []cortex.Taxonomy, error) {
-	resp, err := http.Get(apiv2Pastes + acc)
+func getPastes(c *http.Client, acc string) ([]result, []cortex.Taxonomy, error) {
+	resp, err := c.Get(apiv2Pastes + acc)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -123,10 +136,10 @@ func getPastes(acc string) (*result, []cortex.Taxonomy, error) {
 		})
 		return nil, txs, nil
 	case 200:
-		var r result
+		var r []result
 		dec := json.NewDecoder(resp.Body)
 		if err := dec.Decode(&r); err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("json decode: %s", err.Error())
 		}
 
 		txs = append(txs, cortex.Taxonomy{
@@ -136,8 +149,8 @@ func getPastes(acc string) (*result, []cortex.Taxonomy, error) {
 			Value:     strconv.FormatInt(int64(len(r)), 10),
 		})
 
-		return &r, txs, nil
+		return r, txs, nil
 	default:
-		return nil, nil, fmt.Errorf("Unexpected status code from haveibeenpwned.com %s", resp.Status)
+		return nil, nil, fmt.Errorf("unexpected status code from haveibeenpwned.com %s", resp.Status)
 	}
 }

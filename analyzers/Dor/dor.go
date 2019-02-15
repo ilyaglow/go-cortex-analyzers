@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ilyaglow/dor"
-	"gopkg.ilya.app/ilyaglow/go-cortex.v1"
+	"github.com/ilyaglow/go-cortex"
 )
 
 type dorResponse struct {
@@ -19,7 +19,7 @@ type dorResponse struct {
 
 func main() {
 	// Grab stdin to JobInput structure
-	input, err := cortex.NewInput()
+	input, client, err := cortex.NewInput()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,13 +28,13 @@ func main() {
 	url, err := input.Config.GetString("url")
 	if err != nil {
 		// Report an error if something went wrong
-		cortex.SayError(input, err.Error())
+		input.PrintError(err)
 	}
 
 	// You get somehow report struct from JobInput.Data
-	rep, err := do(input.Data, url)
+	rep, err := do(client, input.Data, url)
 	if err != nil {
-		cortex.SayError(input, err.Error())
+		input.PrintError(err)
 	}
 
 	// Make taxonomies
@@ -59,10 +59,10 @@ func main() {
 	}
 
 	// Report accept marshallable struct and taxonomies
-	cortex.SayReport(rep, txs)
+	input.PrintReport(rep, txs)
 }
 
-func do(domain string, url string) (*dorResponse, error) {
+func do(client *http.Client, domain string, url string) (*dorResponse, error) {
 	resp, err := http.Get(url + "/rank/" + domain)
 	if err != nil {
 		return nil, err

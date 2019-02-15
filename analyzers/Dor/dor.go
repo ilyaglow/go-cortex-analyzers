@@ -63,7 +63,7 @@ func main() {
 }
 
 func do(client *http.Client, domain string, url string) (*dorResponse, error) {
-	resp, err := http.Get(url + "/rank/" + domain)
+	resp, err := client.Get(url + "/rank/" + domain)
 	if err != nil {
 		return nil, err
 	}

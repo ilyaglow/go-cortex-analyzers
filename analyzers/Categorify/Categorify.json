@@ -1,0 +1,15 @@
+{
+  "name": "Categorify",
+  "author": "Ilya Glotov, BI.ZONE",
+  "license": "AGPL-V3",
+  "url": "https://github.com/ilyaglow/go-cortex-analyzers/tree/master/analyzers/Categorify",
+  "version": "1.0",
+  "description": "Check a domain against Categorify service (https://categorify.org)",
+  "dataTypeList": ["domain"],
+  "baseConfig": "Categorify",
+  "command": "Categorify/categorify",
+  "config": {
+      "check_tlp": true,
+      "max_tlp": 1
+  }
+}

@@ -9,9 +9,11 @@ in Go
 
 * [Dor](https://github.com/ilyaglow/dor) analyzer - domain ranking.
 * [HaveIBeenPwned](https://haveibeenpwned.com) analyzer - check an email for
-breaches and pastes.
+  breaches and pastes.
 * [BadPackets](https://mirai.badpackets.net) analyzer - check an IP address
-presence in Mirai alike Botnet list by badpackets.net.
+  presence in Mirai alike Botnet list by badpackets.net.
+* [Categorify](https://categorify.org) analyzer - get categories and rating
+  description of a domain address by using categorify service.
 
 ## How to build
 

@@ -9,7 +9,7 @@ import (
 	"github.com/ilyaglow/go-cortex"
 )
 
-const miraiSearch = "https://mirai.badpackets.net/?country=&autonomousSystem=&ipAddress=%s&asn=&firstSeen__gt=&firstSeen__lt="
+const miraiSearch = "https://mirai.badpackets.net/?source_ip_address=%s&country=&autonomous_system=&asn=&first_seen__gt=&first_seen__lt="
 
 // Entry represents a found entry
 type Entry struct {
@@ -105,11 +105,11 @@ func findByIP(ip string) (*Entry, error) {
 	}
 
 	entry := &Entry{
-		Address:       s.Find("td[class='ipAddress'] a").Text(),
-		ASN:           s.Find("td[class='asn'] a").Text(),
-		ASDescription: s.Find("td[class='autonomousSystem']").Text(),
-		Country:       s.Find("td[class='country']").Text(),
-		FirstSeen:     s.Find("td[class='firstSeen']").Text(),
+		Address:       s.Find("td:first-child a").Text(),
+		ASDescription: s.Find("td:nth-child(2)").Text(),
+		Country:       s.Find("td:nth-child(3)").Text(),
+		ASN:           s.Find("td:nth-child(4) a").Text(),
+		FirstSeen:     s.Find("td:nth-child(5)").Text(),
 	}
 
 	return entry, nil
